@@ -1,7 +1,7 @@
 import random
 
 import requests
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request #(requeste utilizzato per le chiamate POST)
 from sqlalchemy import create_engine, Column, Integer, String, Text, func
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -135,6 +135,50 @@ def get_random_drink():
         "instructions": drink.instructions
     })
 
+#endpoint POST
+@app.route("/drink", methods=["POST"])
+def add_drink():
+    session = SessionLocal()
+
+    data = request.json #dati del client
+
+    if not data:
+        return jsonify({"errore: Non è stato invitato nessun dato"}), 400
+
+    name = data["name"]
+    category = data["category"]
+    instructions = data["instructions"]
+
+    if not name:
+        return jsonify({"errore": "Manca il nome"}), 400
+
+    existing = session.query(Drink).filter(
+        Drink.name.ilike(name)
+    ).first()
+
+    if existing:
+        session.close()
+        return jsonify({"errore" : "Drink già esistente"}), 400
+
+    new_drink = Drink(
+        name = name,
+        category = category,
+        instructions = instructions
+    )
+
+    session.add(new_drink)
+
+    try:
+        session.commit()
+    except:
+        session.rollback()
+
+    session.close()
+
+    return jsonify({
+        "message" : "Drink aggiunto con la POST",
+        "name" : name
+    }), 201
 
 if __name__ == "__main__":
     app.run(debug=True)
