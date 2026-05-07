@@ -20,6 +20,7 @@ Open: http://localhost:8000
 ```bash
 docker build -t drinks-api .
 docker run --rm -p 8000:8000 drinks-api
+```
 
 ## Example requests
 ```bash
